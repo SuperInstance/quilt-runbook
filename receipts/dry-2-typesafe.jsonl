@@ -1,0 +1,3 @@
+{"budget":3,"call_index":1,"channel":"typesafe","error":"TYPESAFE_API_KEY missing — engine channel closed (fail-closed)","http":null,"ok":false,"purpose":"ideation-gate","ts_utc":"2026-10-02T05:01:21.946Z"}
+{"budget":3,"call_index":2,"channel":"typesafe","error":"TYPESAFE_API_KEY missing — engine channel closed (fail-closed)","http":null,"ok":false,"purpose":"root-cause-review","ts_utc":"2026-10-02T05:01:21.953Z"}
+{"budget":3,"call_index":3,"channel":"typesafe","error":"TYPESAFE_API_KEY missing — engine channel closed (fail-closed)","http":null,"ok":false,"purpose":"generalization-audit","ts_utc":"2026-10-02T05:01:21.970Z"}

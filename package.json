@@ -1,0 +1,16 @@
+{
+  "name": "quilt-runbook",
+  "version": "0.1.0",
+  "description": "Append-only play-test runbooks for the quilt: every run leaves real logs, rewinds to stable points, records WHY each adjustment happened, and mines adjustments into compiled cells so runs stop needing adjustments.",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "keyscan": "node scripts/keyscan.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "private": true
+}

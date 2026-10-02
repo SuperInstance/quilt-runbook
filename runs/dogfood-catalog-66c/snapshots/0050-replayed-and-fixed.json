@@ -1,0 +1,534 @@
+{
+  "task": "66-c",
+  "target": "/home/z/my-project/quilt-lookup/catalog/spreadsheet-types.json",
+  "channel": {
+    "judge": "typesafe systemone",
+    "model": "jev-latest",
+    "budget_calls": 3
+  },
+  "selection": [
+    {
+      "family": "SET THEORY",
+      "entry": "set-membership-table",
+      "plan": "static_lookup"
+    },
+    {
+      "family": "SET THEORY",
+      "entry": "inclusion-exclusion-table",
+      "plan": "formula_cell"
+    },
+    {
+      "family": "LOGIC",
+      "entry": "truth-table",
+      "plan": "static_lookup"
+    },
+    {
+      "family": "PROBABILITY & STATISTICS",
+      "entry": "z-table",
+      "plan": "static_lookup"
+    },
+    {
+      "family": "PROBABILITY & STATISTICS",
+      "entry": "markov-chain-table",
+      "plan": "formula_cell"
+    },
+    {
+      "family": "GRAPH & NETWORK",
+      "entry": "shortest-path-table",
+      "plan": "formula_cell"
+    },
+    {
+      "family": "CRYPTOGRAPHY",
+      "entry": "s-box-table",
+      "plan": "static_lookup"
+    },
+    {
+      "family": "GAME THEORY",
+      "entry": "payoff-matrix-2",
+      "plan": "static_lookup"
+    },
+    {
+      "family": "FINANCE",
+      "entry": "time-value-of-money-table",
+      "plan": "formula_cell"
+    },
+    {
+      "family": "FINANCE",
+      "entry": "monte-carlo-table-2",
+      "plan": "static_lookup"
+    }
+  ],
+  "fragments": {
+    "set-membership-table": {
+      "cell": "set-membership-table",
+      "family": "SET THEORY",
+      "catalog_id": "set-membership-table",
+      "kind": "lookup",
+      "spec": {
+        "table": [
+          {
+            "element": "alice",
+            "sets": {
+              "admin": 1,
+              "dev": 1,
+              "ops": 0
+            }
+          },
+          {
+            "element": "bob",
+            "sets": {
+              "admin": 0,
+              "dev": 1,
+              "ops": 1
+            }
+          },
+          {
+            "element": "carol",
+            "sets": {
+              "admin": 0,
+              "dev": 0,
+              "ops": 1
+            }
+          }
+        ]
+      },
+      "examples": [
+        {
+          "element": "alice",
+          "set": "admin",
+          "expected": 1
+        },
+        {
+          "element": "bob",
+          "set": "ops",
+          "expected": 1
+        },
+        {
+          "element": "carol",
+          "set": "dev",
+          "expected": 0
+        }
+      ]
+    },
+    "inclusion-exclusion-table": {
+      "catalog_id": "inclusion-exclusion-table",
+      "cell": "inclusion-exclusion-table",
+      "examples": [
+        {
+          "expected": 7,
+          "region": {
+            "pairs": [
+              2
+            ],
+            "singles": [
+              5,
+              4
+            ]
+          }
+        },
+        {
+          "expected": 20,
+          "region": {
+            "pairs": [
+              4,
+              3,
+              2
+            ],
+            "singles": [
+              12,
+              9,
+              7
+            ],
+            "triple": 1
+          }
+        }
+      ],
+      "family": "SET THEORY",
+      "formula": "inclusion-exclusion",
+      "kind": "formula",
+      "spec": {
+        "n_sets": "n",
+        "note": "n-set inclusion-exclusion: sum singles, subtract pairs, add triple, ...",
+        "signs": "alternating"
+      }
+    },
+    "truth-table": {
+      "cell": "truth-table",
+      "family": "LOGIC",
+      "catalog_id": "truth-table",
+      "kind": "lookup",
+      "spec": {
+        "table": [
+          {
+            "a": 0,
+            "b": 0,
+            "and": 0,
+            "or": 0,
+            "nand": 1
+          },
+          {
+            "a": 0,
+            "b": 1,
+            "and": 0,
+            "or": 1,
+            "nand": 1
+          },
+          {
+            "a": 1,
+            "b": 0,
+            "and": 0,
+            "or": 1,
+            "nand": 1
+          },
+          {
+            "a": 1,
+            "b": 1,
+            "and": 1,
+            "or": 1,
+            "nand": 0
+          }
+        ]
+      },
+      "examples": [
+        {
+          "a": 1,
+          "b": 1,
+          "op": "and",
+          "expected": 1
+        },
+        {
+          "a": 0,
+          "b": 1,
+          "op": "or",
+          "expected": 1
+        },
+        {
+          "a": 1,
+          "b": 1,
+          "op": "nand",
+          "expected": 0
+        }
+      ]
+    },
+    "z-table": {
+      "catalog_id": "z-table",
+      "cell": "z-table",
+      "examples": [
+        {
+          "expected": 0.975,
+          "kind": "cumulative",
+          "z": 1.96
+        },
+        {
+          "expected": 0.05,
+          "kind": "two-tail-p-value",
+          "z": 1.96
+        }
+      ],
+      "family": "PROBABILITY & STATISTICS",
+      "kind": "lookup",
+      "spec": {
+        "mode": "param",
+        "note": "table intent now a mode parameter: cumulative cdf, or two-tail p-value derived as 2(1-cdf)",
+        "rows": [
+          {
+            "cdf": 0.95,
+            "z": 1.645
+          },
+          {
+            "cdf": 0.975,
+            "z": 1.96
+          },
+          {
+            "cdf": 0.995,
+            "z": 2.576
+          }
+        ]
+      }
+    },
+    "markov-chain-table": {
+      "cell": "markov-chain-table",
+      "family": "PROBABILITY & STATISTICS",
+      "catalog_id": "markov-chain-table",
+      "kind": "formula",
+      "formula": "markov-chain",
+      "spec": {
+        "states": [
+          "rain",
+          "sun"
+        ],
+        "matrix": [
+          [
+            0.9,
+            0.1
+          ],
+          [
+            0.5,
+            0.5
+          ]
+        ]
+      },
+      "examples": [
+        {
+          "steps": 2,
+          "from": 0,
+          "to": 0,
+          "expected": 0.86
+        },
+        {
+          "steps": 1,
+          "from": 0,
+          "to": 1,
+          "expected": 0.1
+        }
+      ]
+    },
+    "shortest-path-table": {
+      "cell": "shortest-path-table",
+      "family": "GRAPH & NETWORK",
+      "catalog_id": "shortest-path-table",
+      "kind": "formula",
+      "formula": "shortest-path",
+      "spec": {
+        "edges": [
+          [
+            "A",
+            "B",
+            4
+          ],
+          [
+            "B",
+            "C",
+            3
+          ],
+          [
+            "A",
+            "C",
+            9
+          ],
+          [
+            "C",
+            "D",
+            2
+          ],
+          [
+            "B",
+            "D",
+            7
+          ]
+        ]
+      },
+      "examples": [
+        {
+          "from": "A",
+          "to": "D",
+          "expected": 9
+        },
+        {
+          "from": "A",
+          "to": "C",
+          "expected": 7
+        }
+      ]
+    },
+    "s-box-table": {
+      "cell": "s-box-table",
+      "family": "CRYPTOGRAPHY",
+      "catalog_id": "s-box-table",
+      "kind": "lookup",
+      "spec": {
+        "note": "toy 4-bit S-box (AES-flavored)",
+        "table": [
+          14,
+          4,
+          13,
+          1,
+          2,
+          15,
+          11,
+          8,
+          3,
+          10,
+          6,
+          12,
+          5,
+          9,
+          0,
+          7
+        ]
+      },
+      "examples": [
+        {
+          "input": 0,
+          "expected": 14
+        },
+        {
+          "input": 9,
+          "expected": 10
+        },
+        {
+          "input": 14,
+          "expected": 0
+        }
+      ]
+    },
+    "payoff-matrix-2": {
+      "cell": "payoff-matrix-2",
+      "family": "GAME THEORY",
+      "catalog_id": "payoff-matrix-2",
+      "kind": "lookup",
+      "spec": {
+        "rows": [
+          "C",
+          "D"
+        ],
+        "cols": [
+          "C",
+          "D"
+        ],
+        "values": [
+          [
+            [
+              -1,
+              -1
+            ],
+            [
+              -3,
+              0
+            ]
+          ],
+          [
+            [
+              0,
+              -3
+            ],
+            [
+              -2,
+              -2
+            ]
+          ]
+        ]
+      },
+      "examples": [
+        {
+          "row": "C",
+          "col": "C",
+          "expected": [
+            -1,
+            -1
+          ]
+        },
+        {
+          "row": "D",
+          "col": "C",
+          "expected": [
+            0,
+            -3
+          ]
+        },
+        {
+          "row": "D",
+          "col": "D",
+          "expected": [
+            -2,
+            -2
+          ]
+        }
+      ]
+    },
+    "time-value-of-money-table": {
+      "catalog_id": "time-value-of-money-table",
+      "cell": "time-value-of-money-table",
+      "examples": [
+        {
+          "annual_rate": 0.1,
+          "contribution": "annual",
+          "convention": "ordinary",
+          "expected": 331,
+          "periods": 3,
+          "pmt": 100
+        },
+        {
+          "annual_rate": 0.1,
+          "contribution": "annual",
+          "convention": "due",
+          "expected": 364.1,
+          "periods": 3,
+          "pmt": 100
+        },
+        {
+          "annual_rate": 0.1,
+          "compounding": "semiannual",
+          "contribution": "monthly",
+          "convention": "ordinary",
+          "expected": 1255.3819,
+          "periods": 12,
+          "pmt": 100
+        }
+      ],
+      "family": "FINANCE",
+      "formula": "tvm-fv",
+      "kind": "formula",
+      "spec": {
+        "params": {
+          "convention": "param",
+          "frequency": "param"
+        },
+        "note": "compounding frequency now an explicit parameter too: effective per-period rate aligns compounding m with contribution period p"
+      }
+    },
+    "monte-carlo-table-2": {
+      "catalog_id": "monte-carlo-table-2",
+      "cell": "monte-carlo-table-2",
+      "examples": [
+        {
+          "expected": 4.2171,
+          "seed": 42,
+          "stat": "mean-payoff"
+        }
+      ],
+      "family": "FINANCE",
+      "kind": "lookup",
+      "routed_to": "softjoint:mc-sim-1",
+      "spec": {
+        "note": "DRAFT: attempted as a static lookup",
+        "sampler": {
+          "draws": 10000,
+          "engine": "mersenne-twister",
+          "payoff": "european-call",
+          "seed": 42
+        }
+      }
+    }
+  },
+  "softjoints": {
+    "mc-sim-1": {
+      "backend": {
+        "model": "jev-latest",
+        "prompt_template": "estimate the {{cell}} payoff distribution for state {drift, vol, horizon}; return mean and quantiles",
+        "type": "typesafe-systemone"
+      },
+      "fallback": {
+        "note": "closed-form FV is the deterministic fallback when volatility is zero or the budget is out",
+        "ref": "fragments.time-value-of-money-table",
+        "type": "lookup"
+      },
+      "greeter": false,
+      "id": "mc-sim-1",
+      "inputs": [
+        "fragments.time-value-of-money-table"
+      ],
+      "kind": "softjoint",
+      "notes": "Monte Carlo payoff tables are sampler-dependent: the same seed+draws under a different PRNG implementation yields a different table, so no portable static lookup exists. Stays dynamic (soft joint), fallback to the compiled deterministic cell.",
+      "vector": {
+        "dim": 3,
+        "labels": [
+          "volatility",
+          "draws",
+          "horizon"
+        ]
+      }
+    }
+  },
+  "lessons": []
+}

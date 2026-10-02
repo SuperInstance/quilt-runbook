@@ -1,0 +1,503 @@
+{
+  "task": "66-c",
+  "target": "/home/z/my-project/quilt-lookup/catalog/spreadsheet-types.json",
+  "channel": {
+    "judge": "typesafe systemone",
+    "model": "jev-latest",
+    "budget_calls": 3
+  },
+  "selection": [
+    {
+      "family": "SET THEORY",
+      "entry": "set-membership-table",
+      "plan": "static_lookup"
+    },
+    {
+      "family": "SET THEORY",
+      "entry": "inclusion-exclusion-table",
+      "plan": "formula_cell"
+    },
+    {
+      "family": "LOGIC",
+      "entry": "truth-table",
+      "plan": "static_lookup"
+    },
+    {
+      "family": "PROBABILITY & STATISTICS",
+      "entry": "z-table",
+      "plan": "static_lookup"
+    },
+    {
+      "family": "PROBABILITY & STATISTICS",
+      "entry": "markov-chain-table",
+      "plan": "formula_cell"
+    },
+    {
+      "family": "GRAPH & NETWORK",
+      "entry": "shortest-path-table",
+      "plan": "formula_cell"
+    },
+    {
+      "family": "CRYPTOGRAPHY",
+      "entry": "s-box-table",
+      "plan": "static_lookup"
+    },
+    {
+      "family": "GAME THEORY",
+      "entry": "payoff-matrix-2",
+      "plan": "static_lookup"
+    },
+    {
+      "family": "FINANCE",
+      "entry": "time-value-of-money-table",
+      "plan": "formula_cell"
+    },
+    {
+      "family": "FINANCE",
+      "entry": "monte-carlo-table-2",
+      "plan": "static_lookup"
+    }
+  ],
+  "fragments": {
+    "set-membership-table": {
+      "cell": "set-membership-table",
+      "family": "SET THEORY",
+      "catalog_id": "set-membership-table",
+      "kind": "lookup",
+      "spec": {
+        "table": [
+          {
+            "element": "alice",
+            "sets": {
+              "admin": 1,
+              "dev": 1,
+              "ops": 0
+            }
+          },
+          {
+            "element": "bob",
+            "sets": {
+              "admin": 0,
+              "dev": 1,
+              "ops": 1
+            }
+          },
+          {
+            "element": "carol",
+            "sets": {
+              "admin": 0,
+              "dev": 0,
+              "ops": 1
+            }
+          }
+        ]
+      },
+      "examples": [
+        {
+          "element": "alice",
+          "set": "admin",
+          "expected": 1
+        },
+        {
+          "element": "bob",
+          "set": "ops",
+          "expected": 1
+        },
+        {
+          "element": "carol",
+          "set": "dev",
+          "expected": 0
+        }
+      ]
+    },
+    "inclusion-exclusion-table": {
+      "cell": "inclusion-exclusion-table",
+      "family": "SET THEORY",
+      "catalog_id": "inclusion-exclusion-table",
+      "kind": "formula",
+      "formula": "inclusion-exclusion",
+      "spec": {
+        "n_sets": "two",
+        "note": "DRAFT: hardcoded the 2-set identity |AuB| = |A|+|B|-|AnB|"
+      },
+      "examples": [
+        {
+          "region": {
+            "singles": [
+              5,
+              4
+            ],
+            "pairs": [
+              2
+            ]
+          },
+          "expected": 7
+        },
+        {
+          "region": {
+            "singles": [
+              12,
+              9,
+              7
+            ],
+            "pairs": [
+              4,
+              3,
+              2
+            ],
+            "triple": 1
+          },
+          "expected": 20
+        }
+      ]
+    },
+    "truth-table": {
+      "cell": "truth-table",
+      "family": "LOGIC",
+      "catalog_id": "truth-table",
+      "kind": "lookup",
+      "spec": {
+        "table": [
+          {
+            "a": 0,
+            "b": 0,
+            "and": 0,
+            "or": 0,
+            "nand": 1
+          },
+          {
+            "a": 0,
+            "b": 1,
+            "and": 0,
+            "or": 1,
+            "nand": 1
+          },
+          {
+            "a": 1,
+            "b": 0,
+            "and": 0,
+            "or": 1,
+            "nand": 1
+          },
+          {
+            "a": 1,
+            "b": 1,
+            "and": 1,
+            "or": 1,
+            "nand": 0
+          }
+        ]
+      },
+      "examples": [
+        {
+          "a": 1,
+          "b": 1,
+          "op": "and",
+          "expected": 1
+        },
+        {
+          "a": 0,
+          "b": 1,
+          "op": "or",
+          "expected": 1
+        },
+        {
+          "a": 1,
+          "b": 1,
+          "op": "nand",
+          "expected": 0
+        }
+      ]
+    },
+    "z-table": {
+      "cell": "z-table",
+      "family": "PROBABILITY & STATISTICS",
+      "catalog_id": "z-table",
+      "kind": "lookup",
+      "spec": {
+        "note": "DRAFT: one cumulative table, intent hardcoded",
+        "rows": [
+          {
+            "z": 1.645,
+            "cdf": 0.95
+          },
+          {
+            "z": 1.96,
+            "cdf": 0.975
+          },
+          {
+            "z": 2.576,
+            "cdf": 0.995
+          }
+        ]
+      },
+      "examples": [
+        {
+          "z": 1.96,
+          "kind": "cumulative",
+          "expected": 0.975
+        },
+        {
+          "z": 1.96,
+          "kind": "two-tail-p-value",
+          "expected": 0.05
+        }
+      ]
+    },
+    "markov-chain-table": {
+      "cell": "markov-chain-table",
+      "family": "PROBABILITY & STATISTICS",
+      "catalog_id": "markov-chain-table",
+      "kind": "formula",
+      "formula": "markov-chain",
+      "spec": {
+        "states": [
+          "rain",
+          "sun"
+        ],
+        "matrix": [
+          [
+            0.9,
+            0.1
+          ],
+          [
+            0.5,
+            0.5
+          ]
+        ]
+      },
+      "examples": [
+        {
+          "steps": 2,
+          "from": 0,
+          "to": 0,
+          "expected": 0.86
+        },
+        {
+          "steps": 1,
+          "from": 0,
+          "to": 1,
+          "expected": 0.1
+        }
+      ]
+    },
+    "shortest-path-table": {
+      "cell": "shortest-path-table",
+      "family": "GRAPH & NETWORK",
+      "catalog_id": "shortest-path-table",
+      "kind": "formula",
+      "formula": "shortest-path",
+      "spec": {
+        "edges": [
+          [
+            "A",
+            "B",
+            4
+          ],
+          [
+            "B",
+            "C",
+            3
+          ],
+          [
+            "A",
+            "C",
+            9
+          ],
+          [
+            "C",
+            "D",
+            2
+          ],
+          [
+            "B",
+            "D",
+            7
+          ]
+        ]
+      },
+      "examples": [
+        {
+          "from": "A",
+          "to": "D",
+          "expected": 9
+        },
+        {
+          "from": "A",
+          "to": "C",
+          "expected": 7
+        }
+      ]
+    },
+    "s-box-table": {
+      "cell": "s-box-table",
+      "family": "CRYPTOGRAPHY",
+      "catalog_id": "s-box-table",
+      "kind": "lookup",
+      "spec": {
+        "note": "toy 4-bit S-box (AES-flavored)",
+        "table": [
+          14,
+          4,
+          13,
+          1,
+          2,
+          15,
+          11,
+          8,
+          3,
+          10,
+          6,
+          12,
+          5,
+          9,
+          0,
+          7
+        ]
+      },
+      "examples": [
+        {
+          "input": 0,
+          "expected": 14
+        },
+        {
+          "input": 9,
+          "expected": 10
+        },
+        {
+          "input": 14,
+          "expected": 0
+        }
+      ]
+    },
+    "payoff-matrix-2": {
+      "cell": "payoff-matrix-2",
+      "family": "GAME THEORY",
+      "catalog_id": "payoff-matrix-2",
+      "kind": "lookup",
+      "spec": {
+        "rows": [
+          "C",
+          "D"
+        ],
+        "cols": [
+          "C",
+          "D"
+        ],
+        "values": [
+          [
+            [
+              -1,
+              -1
+            ],
+            [
+              -3,
+              0
+            ]
+          ],
+          [
+            [
+              0,
+              -3
+            ],
+            [
+              -2,
+              -2
+            ]
+          ]
+        ]
+      },
+      "examples": [
+        {
+          "row": "C",
+          "col": "C",
+          "expected": [
+            -1,
+            -1
+          ]
+        },
+        {
+          "row": "D",
+          "col": "C",
+          "expected": [
+            0,
+            -3
+          ]
+        },
+        {
+          "row": "D",
+          "col": "D",
+          "expected": [
+            -2,
+            -2
+          ]
+        }
+      ]
+    },
+    "time-value-of-money-table": {
+      "cell": "time-value-of-money-table",
+      "family": "FINANCE",
+      "catalog_id": "time-value-of-money-table",
+      "kind": "formula",
+      "formula": "tvm-fv",
+      "spec": {
+        "params": {
+          "convention": "ordinary",
+          "frequency": "annual"
+        },
+        "note": "DRAFT: timing + compounding hardcoded"
+      },
+      "examples": [
+        {
+          "pmt": 100,
+          "periods": 3,
+          "annual_rate": 0.1,
+          "contribution": "annual",
+          "convention": "ordinary",
+          "expected": 331
+        },
+        {
+          "pmt": 100,
+          "periods": 3,
+          "annual_rate": 0.1,
+          "contribution": "annual",
+          "convention": "due",
+          "expected": 364.1
+        },
+        {
+          "pmt": 100,
+          "periods": 12,
+          "annual_rate": 0.1,
+          "contribution": "monthly",
+          "compounding": "semiannual",
+          "convention": "ordinary",
+          "expected": 1255.3819
+        }
+      ]
+    },
+    "monte-carlo-table-2": {
+      "cell": "monte-carlo-table-2",
+      "family": "FINANCE",
+      "catalog_id": "monte-carlo-table-2",
+      "kind": "lookup",
+      "spec": {
+        "note": "DRAFT: attempted as a static lookup",
+        "sampler": {
+          "engine": "mersenne-twister",
+          "seed": 42,
+          "draws": 10000,
+          "payoff": "european-call"
+        }
+      },
+      "examples": [
+        {
+          "seed": 42,
+          "stat": "mean-payoff",
+          "expected": 4.2171
+        }
+      ]
+    }
+  },
+  "softjoints": {},
+  "lessons": []
+}
