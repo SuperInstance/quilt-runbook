@@ -132,8 +132,10 @@ const VALIDATORS = {
 // ledger io
 // ---------------------------------------------------------------------------
 
-/** Step id over the canonical body. The body is everything except prev/id. */
-function stepId(runId, step) {
+/** Step id over the canonical body. The body is everything except prev/id.
+ *  Exported for src/seal.js: the custody courtroom re-verifies each chained
+ *  step's own id without duplicating this formula (one hash law, one place). */
+export function stepId(runId, step) {
   const body = { seq: step.seq, ts_utc: step.ts_utc, op: step.op, run_id: step.run_id };
   if ('payload' in step) body.payload = step.payload;
   if ('receipt' in step) body.receipt = step.receipt;

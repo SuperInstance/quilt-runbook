@@ -15,11 +15,21 @@
 //   * if state.json had drifted past the last snapshot, the drifted bytes are
 //     preserved as snapshots/superseded-at-<marker_seq>.json (never delete data).
 //   * snapshots are read from inside the run dir only; path escapes are rejected.
+//   * CUSTODY GATE (L10, lane 68-b): a run sealed by src/seal.js (run.seal.json
+//     + run.chain.jsonl sidecar) is verified through the FULL custody courtroom
+//     BEFORE anything materializes; and the sealed boundary is the custody
+//     floor — resuming from a stablepoint that PRECEDES it refuses with
+//     REWIND_PAST_CUSTODY naming the checkpoint (the organ rewind.mjs
+//     resolveTarget law, mirrored: rewind below the custody floor is refused).
+//     Resuming AT the boundary step is the legal case — that is the signed
+//     state itself. Pass the verifier key as opts.key (an HMAC seal cannot
+//     verify without it — fail-closed, CHECKPOINT_SIGNATURE_REQUIRED).
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { stateHash } from './canonical.js';
 import { loadRun, Run } from './run.js';
+import { verifyRunCustody, sealFileFor, chainFileFor } from './seal.js';
 
 function isStr(v) { return typeof v === 'string' && v.length > 0; }
 
@@ -30,17 +40,42 @@ function isStr(v) { return typeof v === 'string' && v.length > 0; }
  *               string — the label of a stable point (LAST match wins; labels
  *                        are developer-facing names, the seq is the hard ref)
  *
+ * resumeFrom(runDir, seqOrLabel, opts)
+ *   opts: { key } — the custody verifier key; REQUIRED (fail-closed) when the
+ *          run carries a seal (run.seal.json)
+ *
  * Throws (HARD, before anything is appended) on:
  *   NO_SUCH_RUN / RUN_LEDGER_TAMPER (chain verify fails, names the seq)
+ *   CUSTODY_SEAL_MISSING     — a chain sidecar exists but its seal doc is gone
+ *   CHECKPOINT_* / CHAIN_* / SEAL_* — the custody courtroom threw (src/seal.js:
+ *                              wrong/missing key, tampered sidecar, forged
+ *                              anchor, snapshot drift under the seal)
+ *   REWIND_PAST_CUSTODY     — the requested stablepoint PRECEDES the sealed
+ *                              boundary (organ rewind law, mirrored; names the
+ *                              checkpoint boundary + manifestHash)
  *   NO_SUCH_STABLEPOINT  — ref matches nothing, or matches a non-stablepoint step
  *   SNAPSHOT_MISSING     — the §5c snapshot file is gone
  *   STABLEPOINT_HASH_MISMATCH — snapshot bytes no longer hash to state_hash
  *                               (names the stable point's seq — never resume on
  *                                a corrupted snapshot)
  */
-export function resumeFrom(runDir, seqOrLabel) {
+export function resumeFrom(runDir, seqOrLabel, opts = {}) {
   const { steps, runId } = loadRun(runDir); // hard error on tamper, names seq
   if (steps.length === 0) throw noSuch('NO_SUCH_RUN', 'run.jsonl has no steps', null);
+
+  // -- custody gate FIRST (L10): the courtroom before anything moves ---------
+  // A sealed run must prove custody before a resume touches state. An unsealed
+  // run (no seal doc, no sidecar) resumes exactly as before — the gate is
+  // additive and only exists where custody was claimed.
+  let custody = null;
+  if (fs.existsSync(sealFileFor(runDir))) {
+    custody = verifyRunCustody(runDir, { key: opts.key }); // throws organ codes
+  } else if (fs.existsSync(chainFileFor(runDir))) {
+    // a sidecar without its seal document: the signature half of custody is
+    // missing — either deleted (suspicious) or a crashed mint (re-run sealRun)
+    throw noSuch('CUSTODY_SEAL_MISSING',
+      `run ${runId} carries a chain sidecar but no run.seal.json — the signature half of custody is missing; re-mint with sealRun() or restore the seal document`, null);
+  }
 
   // -- find the stable point ------------------------------------------------
   let sp = null;
@@ -58,6 +93,23 @@ export function resumeFrom(runDir, seqOrLabel) {
     if (!sp) throw noSuch('NO_SUCH_STABLEPOINT', `no stablepoint labeled "${seqOrLabel}"`, null);
   } else {
     throw noSuch('NO_SUCH_STABLEPOINT', 'ref must be an integer seq or a label string', null);
+  }
+
+  // -- the custody floor (organ rewind.mjs resolveTarget, mirrored) ----------
+  // resolveTarget refuses toSeq < court.genesisSeq with REWIND_PAST_CUSTODY
+  // "naming the checkpoint"; here the floor is the sealed boundary STEP seq:
+  // resuming from inside signed history would fork the live line below the
+  // anchor the keyholder vouched for. Resuming AT the boundary is the legal
+  // case — the signed state itself (the organ seed equivalent).
+  if (custody && sp.seq < custody.sealedThroughSeq) {
+    const err = noSuch('REWIND_PAST_CUSTODY',
+      `stablepoint seq ${sp.seq} (label "${sp.payload.label}") precedes the sealed boundary ` +
+      `(steps 1..${custody.sealedThroughSeq} are signed custody, checkpoint manifestHash ` +
+      `${custody.manifestHash}) — the sealed prefix is the custody floor: resume at the ` +
+      `boundary stablepoint or after, or mint a superseding seal to re-open the run's line`, sp.seq);
+    err.manifestHash = custody.manifestHash;
+    err.boundarySeq = custody.sealedThroughSeq;
+    throw err;
   }
 
   // -- verify the snapshot against the recorded §5c hash ---------------------

@@ -102,6 +102,8 @@ appends.**
   organ, the runbook stable point's `state_hash` can BE the organ checkpoint hash; the
   runbook adds the WHY records (trigger/hypothesis/evidence) the organ deliberately does
   not carry, and the organ adds signed custody the runbook deliberately does not fake.
+  (Update, lane 68-b: the custody half of that sentence is now closed from OUR side
+  too — `src/seal.js` mints organ-EXACT signed checkpoints over the run chain; see §5.)
 - **cot-quilt `runs/`:** cot-quilt's run directories are receipt archives for a finished
   pipeline. The runbook's runs are *live* ledgers — same jsonl aesthetic, but
   interactive, rewindable, and mined. A cot-quilt run can be imported as a read-only
@@ -190,3 +192,114 @@ Net effect on "runs stop needing adjustments": the catalog→cell recipe the run
 discovered (draft → pure-evaluator gate → parameterize-or-tombstone → replay from
 `drafted` with §5a records re-applied → mine) is itself compiled into
 `scripts/dogfood-catalog.mjs`; the next catalog run starts from the fixed cells.
+
+## §5. Signed run custody — the seal (lane 68-b)
+
+The wave-67 hand-off claimed: "the same seal pattern maps 1:1 onto quilt-runbook's
+jsonl ledger" (67-a Stage Summary). The claim was verified against the actual code
+before being believed, per house law — and it is TRUE at the two layers that matter
+and needed TWO CORRECTIONS at the layers where the substrates differ. The pattern's
+home is `quilt-chrono/src/seal.js` (67-a); both build on organ protocol v2
+(`quilt-jev-toolkit/src/organ/{manifest,boot,checkpoint}.mjs`, spec §8).
+
+**What carried over 1:1 (verified, not assumed):**
+- The sidecar link IS an organ receipt: `{seq, op: <entry verbatim>, prev, hash}`,
+  `hash = sha256(canonicalJson({seq, op, prev}))`, anchored at `GENESIS` — so the
+  organ toolkit's `verifyChain`/`receiptHash` verify a runbook sidecar unmodified
+  (proven in-suite against the real sibling code).
+- The seal document is BYTE-EXACTLY a `quilt.organ.checkpoint` v1:
+  `sig = HMAC-SHA256(key, canonical({hash, manifestHash, seq}))` — the
+  `checkpointSigningPayload` bytes of organ `boot.mjs`. No runbook-specific fields
+  (drift is how parallel standards start). The organ's own `verifySignedCheckpoint`
+  and `validateManifest` accept run seals and reject forgeries (tested).
+- The append-only sidecar discipline: byte-prefix check, `CHAIN_REWRITE_REFUSED`,
+  never extend a broken chain, create-only first write, the ledger file never
+  opened for writing.
+- Tamper detection at EVERY offset (tested link-by-link, plus raw-byte flips and
+  prev-breaks), the anchor law for self-consistent re-hashed forgeries
+  (`CHECKPOINT_ANCHOR_MISMATCH`), and post-seal growth with old seals still holding
+  at their boundaries.
+
+**Correction 1 — the seq base (forced by organ law, named the SEQ-BASE LAW).**
+Runbook steps are 1-BASED (L1); organ receipt chains start at seq 0 anchored at
+`GENESIS`, and organ `validateManifest` refuses a manifest whose
+`receiptRange.start !== 0` at seq 0 (`boot.mjs` §4d likewise pins the anchor's
+start to 0). So the sidecar link's `seq` is the 0-based LEDGER INDEX and the
+step's own 1-based seq rides verbatim inside `op`: `link.seq = step.seq - 1`,
+`cp.seq` is the link index, and the runbook-facing boundary is
+`sealedThroughSeq = cp.seq + 1`. The alternative (1-based links) would force
+`genesis.prevHash` to be a hex hash at seq 1 — a DIFFERENT manifest dialect, i.e.
+exactly the drift this lane exists to avoid.
+
+**Correction 2 — the anchored state model.** Chrono folds WRITES from its entries
+(cells are what a chrono ledger proves). A runbook ledger's steps are
+attempts/observes/adjusts — no cell writes to fold. What a bare run.jsonl PROVES
+at any boundary is its §5c stablepoint ANCHORS: each stablepoint step pins snapshot
+bytes by `state_hash` (L5). So the seal manifest's cells are the anchored
+stablepoints (`stablepoint/<seq>` → `{seq, label, state_hash, snapshot}`, kind
+`value`), and the courtroom's runbook-specific witness is SNAPSHOT RE-DERIVATION:
+every anchored stablepoint's snapshot bytes must re-hash to its §5c `state_hash`
+(`STABLEPOINT_HASH_MISMATCH`/`SNAPSHOT_MISSING`, naming the seq — rewind's own L5
+codes, applied to the signed prefix). A prefix with no stablepoints anchors nothing
+and refuses to seal (`SEAL_EMPTY_LEDGER`). The chained step's own L2 `id` is
+re-verified inside the courtroom (via `run.js stepId`, now exported — one hash
+formula, one place), so even a minter who skips the loadRun courtroom cannot sign
+steps that were never in a valid ledger.
+
+**The custody floor (the rewind law, mirrored).** Organ `rewind.mjs`
+`resolveTarget` refuses `toSeq < court.genesisSeq` with `REWIND_PAST_CUSTODY`,
+"naming the checkpoint" — rewind below the custody floor is impossible. The
+runbook mirror: `resumeFrom` on a sealed run (a) runs the FULL courtroom BEFORE
+anything materializes (custody gate first, then stablepoint lookup), and (b)
+refuses a stablepoint whose seq PRECEDES the sealed boundary (`sp.seq <
+sealedThroughSeq`) with `REWIND_PAST_CUSTODY` carrying `boundarySeq` and
+`manifestHash`. Resuming AT the boundary stablepoint is the legal case — that is
+the signed state itself (the organ seed equivalent). Honest scope: the floor is a
+POLICY guard, not an integrity requirement — the chain catches byte tampering
+either way; what the floor protects is the SEMANTICS of a hand-off (the seal
+asserts "the state at the boundary is the vouched line"; silently forking the live
+line from inside signed history would contradict the finality the recipient relies
+on). The escape hatch is an explicit, receipted act: mint a superseding seal at an
+earlier boundary (`sealRun(dir, {key, seq})` — `supersedes` lineage and `organId`
+carry are automatic) and resume at THAT anchor. This was proven on the real
+committed dogfood ledger (54 steps, 3 stablepoints) in a temp copy: tip seal →
+pre-floor resume refused → superseding seal at the `replayed-and-fixed` boundary →
+resume succeeds. `runs/` itself stays unsealed: sealing is for live/handed-off
+runs, and a committed seal with a committed key would be custody theater.
+
+**Alternatives considered (the ideation pass for this slice):**
+
+- **In-band chaining** (append `prev`/`hash` columns to the step records
+  themselves): rejected — it rewrites the sealed step schema (§5a/§5c are
+  interop contract shapes, L4), breaks byte-compatibility with every existing
+  ledger, and makes the ledger unusable without the hasher. The sidecar keeps the
+  original bytes sovereign (same verdict as chrono 67-a, re-derived here).
+- **A runbook-native seal format** (own document carrying `run_id`/`at_seq`):
+  rejected — a parallel standard where a shared one exists. The organ checkpoint
+  shape fits once the seq base and the cell model are corrected; interop with the
+  fleet's custody layer is the point of the exercise.
+- **Runtime cross-repo import of the organ code** (`import
+  '../quilt-jev-toolkit/src/organ/boot.mjs'`): rejected — breaks stdlib-only
+  standalone use and couples repos at runtime. The formats match, no code is
+  imported; equivalence is a TEST (skip-if-absent interop suite) instead of a
+  claim — the 67-a design law, consumed here.
+- **Allow pre-boundary resumes** (the snapshots inside the signed prefix ARE
+  signature-anchored, so custody there is STRONGER than post-boundary): seriously
+  considered — rejected. The hand-off seal is a finality assertion, not just a
+  tamper flag; an in-place fork below the anchor would make the recipient's
+  provenance claim quietly false. The superseding-seal re-open keeps every such
+  fork signed and lineage-recorded. Honest cost, receipted: the classic mid-run
+  rewind on a sealed run needs one re-seal first (cheap, automatic lineage).
+- **`canonicalJSON` from `src/canonical.js` for signature bytes**: rejected — it
+  forgives (skips undefined object fields, stringifies `NaN` as `null`) where the
+  organ canonicalizer throws, and a signature must never forgive. Both agree on
+  every JSON-safe value (tested), so ledger hashes and custody hashes never
+  disagree in practice; the organ-exact `canonicalJson` lives in `seal.js` with
+  the divergence documented in its header.
+
+**Parked (honest scope):** partial-custody hand-off (carry only the sealed prefix
++ seed + checkpoint — the organ `carvePartialCustody` analog for giant runs);
+custody for the derived streams (`adjustments.jsonl`, `compilations.jsonl` — they
+mirror ledger steps and inherit their integrity transitively); Ed25519 (organ v3:
+"who vouches" instead of "keyholder vouches", zero format drift); O(tail) chain
+booting from the sealed anchor. All format-compatible with what shipped.
